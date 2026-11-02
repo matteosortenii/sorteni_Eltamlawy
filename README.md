@@ -9,48 +9,46 @@ Analisi del prezzo minimo, massimo e medio della benzina erogata in modalità **
 
 | Metrica | Prezzo (€/L) |
 | :--- | :--- |
-| **Prezzo Minimo** | *[Inserire valore min, es. 0.180 €/L]* |
-| **Prezzo Medio** | *[Inserire valore medio, es. 1.845 €/L]* |
-| **Prezzo Massimo** | *[Inserire valore max, es. 9.999 €/L]* |
+| **Prezzo Minimo** | 1.206 €/L |
+| **Prezzo Medio** | 2.035 €/L |
+| **Prezzo Massimo** | 2.869 €/L |
 
 ---
 
 ## 2. Valori Estremi
 
 ### 🔴 Top 5 Prezzi Più Alti
-1. **€ [Prezzo 1]** — *[Gestore / Impianto]*
-2. **€ [Prezzo 2]** — *[Gestore / Impianto]*
-3. **€ [Prezzo 3]** — *[Gestore / Impianto]*
-4. **€ [Prezzo 4]** — *[Gestore / Impianto]*
-5. **€ [Prezzo 5]** — *[Gestore / Impianto]*
+1. **€ 2.869** — *Api-Ip / Milano (MI)*
+2. **€ 2.763** — *Pompe Bianche / Capraia Isola (LI)*
+3. **€ 2.699** — *San Marco Petroli / Bolzano Vicentino (VI) - Autostrada A31*
+4. **€ 2.699** — *Pompe Bianche / Lampedusa e Linosa (AG)*
+5. **€ 2.699** — *San Marco Petroli / Bolzano Vicentino (VI) - Autostrada A31*
 
 ### 🟢 Top 5 Prezzi Più Bassi
-1. **€ [Prezzo 1]** — *[Gestore / Impianto]*
-2. **€ [Prezzo 2]** — *[Gestore / Impianto]*
-3. **€ [Prezzo 3]** — *[Gestore / Impianto]*
-4. **€ [Prezzo 4]** — *[Gestore / Impianto]*
-5. **€ [Prezzo 5]** — *[Gestore / Impianto]*
+1. **€ 1.206** — *Agip Eni / Livigno (SO)*
+2. **€ 1.206** — *Agip Eni / Livigno (SO)*
+3. **€ 1.249** — *Q8 / Gravina di Catania (CT)*
+4. **€ 1.558** — *Pompe Bianche / Rieti (RI)*
+5. **€ 1.564** — *Pompe Bianche / Viterbo (VT)*
 
 ---
 
 ## 3. Valutazione della Credibilità dei Dati (Data Quality)
 
-Osservando i 5 prezzi più bassi e i 5 più alti emergono chiare anomalie dovute ad errori umani o tecnici in fase di inserimento dati sul portale del MIMIT (Ministero delle Imprese e del Made in Italy).
+Osservando i 5 prezzi più bassi e i 5 più alti emergono chiare specificità geografiche e potenziali anomalie dovute a particolari regimi fiscali o ad errori di inserimento dati sul portale del MIMIT (Ministero delle Imprese e del Made in Italy).
 
-### ❌ Analisi dei Dati Non Credibili (Outlier/Anomalie)
-- **Prezzi irrealisticamente bassi (es. < 1.00 €/L o vicini a 0 €):** 
-  - *Causa:* Errore di battitura durante l'inserimento (es. `0.180` al posto di `1.800` o virgola mobile errata).
-  - *Impatto:* Abbassa erroneamente la media aritmetica nazionale se non filtrata.
-- **Prezzi irrealisticamente alti (es. > 3.00 €/L o vicini a 9.999 €):**
-  - *Causa:* Valori "placeholder" o di test utilizzati dal gestore (es. `9.999 €/L`), oppure refusi di digitazione (es. `18.50 €/L` invece di `1.850 €/L`).
-  - *Impatto:* Sposta la media verso l'alto e distorce i dati sulle province.
+### ❌ Analisi dei Dati Particolari / Non Credibili (Outlier/Anomalie)
+- **Prezzi eccezionalmente bassi (~1.20 €/L):** 
+  - *Causa:* Nel caso specifico di **Livigno**, i prezzi così bassi sono reali e dovuti allo status di **zona franca** (esenzione da IVA e accise sui carburanti). Altri sconti forti (es. 1.24 €/L) possono derivare da promozioni aggressive o errori di digitazione.
+- **Prezzi elevati (~2.70 - 2.80 €/L):**
+  - *Causa:* Rilevati su **isole minori** (es. Capraia, Lampedusa), dove i costi di trasporto marittimo pesano notevolmente, oppure in tratte **autostradali** ad alto margine. Il valore massimo assoluto di 2.869 €/L a Milano, trattandosi di self-service urbano, è verosimilmente un **errore di inserimento** del gestore (scambio tra prezzo servito e self).
 
 ### ✅ Quali prezzi sono credibili?
-I prezzi sono da ritenersi **credibili** solo quando rientrano all'interno della forchetta reale di mercato (indicativamente tra **1.60 €/L e 2.20 €/L** per la benzina self-service, a seconda che si tratti di rete urbana o autostradale).
+I prezzi sono da ritenersi **credibili** quando rientrano nella forchetta reale di mercato italiano (indicativamente tra **1.60 €/L e 2.20 €/L** per la benzina self-service ordinaria).
 
 ---
 
 ## 4. Conclusione e Strategia di Pulizia Dati
 Per ottenere un calcolo corretto della **media nazionale** e delle analisi successive (come la **Domanda 3**):
-1. **Filtering/Trimming:** È indispensabile eliminare gli outlier prima di calcolare la media (es. applicando filtri con il metodo dell'Interquartile Range - IQR, oppure rimuovendo i prezzi $< 1.00$ € e $> 3.00$ €).
-2. **Impatto della pulizia:** Senza la rimozione dei dati non credibili, la media calcolata risulterà alterata e non rappresentativa della realtà del mercato italiano.
+1. **Filtering/Trimming:** È opportuno valutare la rimozione o la gestione degli outlier estremi (es. valori palesemente errati dovuti a refusi di battitura) per evitare distorsioni statistiche.
+2. **Impatto della pulizia:** Tenere conto dei regimi fiscali particolari (come Livigno) è essenziale per non falsare le valutazioni territoriali su base provinciale.
