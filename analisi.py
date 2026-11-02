@@ -1,43 +1,42 @@
 import csv
 
-FILE_IMPIANTI = "dati/carburanti-impianti-2026-10-13.csv"
-FILE_PREZZI = "dati/carburanti-prezzi-2026-10-13.csv"
+FILE_IMPIANTI = "carburanti-impianti-2026-10-13.csv"
+FILE_PREZZI = "carburanti-prezzi-2026-10-13.csv"
 
 def carica_impianti(nomefile):
-    """Carica l'anagrafica degli impianti gestendo la virgoletta anomala."""
     impianti = {}
     scartate = 0
-    with open(nomefile, "r", encoding="utf-8", newline="") as f:
-        f.readline() # Salta la riga "Estrazione del..."
+    with open(nomefile, "r", encoding="utf-8", errors="ignore") as f:
+        f.readline()
         reader = csv.reader(f, delimiter="|", quoting=csv.QUOTE_NONE)
+        next(reader, None)
         for riga in reader:
             if len(riga) >= 10:
-                id_imp = riga[0]
+                id_imp = riga[0].strip()
                 impianti[id_imp] = {
-                    "bandiera": riga[1],
-                    "comune": riga[5],
-                    "provincia": riga[6]
+                    "bandiera": riga[2].strip(),
+                    "comune": riga[6].strip(),
+                    "provincia": riga[7].strip()
                 }
             else:
                 scartate += 1
     return impianti, scartate
 
-
 def carica_prezzi(nomefile):
-    """Carica il file dei prezzi dei carburanti."""
     dati = []
     scartate = 0
-    with open(nomefile, "r", encoding="utf-8", newline="") as f:
-        f.readline() # Salta la riga "Estrazione del..."
-        reader = csv.reader(f, delimiter="|")
+    with open(nomefile, "r", encoding="utf-8", errors="ignore") as f:
+        f.readline()
+        reader = csv.reader(f, delimiter="|", quoting=csv.QUOTE_NONE)
+        next(reader, None)
         for riga in reader:
             if len(riga) >= 4:
                 try:
                     dati.append({
-                        "idImpianto": riga[0],
-                        "descCarburante": riga[1],
-                        "prezzo": float(riga[2]),
-                        "isSelf": int(riga[3])
+                        "idImpianto": riga[0].strip(),
+                        "descCarburante": riga[1].strip(),
+                        "prezzo": float(riga[2].strip()),
+                        "isSelf": riga[3].strip()
                     })
                 except ValueError:
                     scartate += 1
@@ -45,75 +44,125 @@ def carica_prezzi(nomefile):
                 scartate += 1
     return dati, scartate
 
-
 def domanda1(impianti, prezzi, scartate_impianti, scartate_prezzi):
-    """Risponde alla domanda 1 del dataset carburanti combinando impianti e prezzi."""
-    
-    # 1. Quanti distributori ci sono nell'anagrafica?
     tot_distributori = len(impianti)
-    
-    # 2. Quante righe scartate e perché?
     tot_scartate = scartate_impianti + scartate_prezzi
-    motivo_scarto = "Righe vuote, con colonne insufficienti o con formato errato."
-    
-    # 3. Quanti tipi di carburante diversi compaiono?
     tipi_carburante = set(p["descCarburante"] for p in prezzi)
-    
-    # 4. Quanti prezzi sono self e quanti servito?
-    self_count = sum(1 for p in prezzi if p["isSelf"] == 1)
-    servito_count = sum(1 for p in prezzi if p["isSelf"] == 0)
-    
+    self_count = sum(1 for p in prezzi if p["isSelf"] == "1")
+    servito_count = sum(1 for p in prezzi if p["isSelf"] == "0")
     return {
         "distributori": tot_distributori,
         "scartate": tot_scartate,
-        "motivo": motivo_scarto,
-        "tipi": list(tipi_carburante),
         "num_tipi": len(tipi_carburante),
         "self": self_count,
         "servito": servito_count
     }
 
+def domanda2(prezzi):
+    benzina_self = [p["prezzo"] for p in prezzi if p["descCarburante"].lower() == "benzina" and p["isSelf"] == "1"]
+    if not benzina_self:
+        return None
+    return {
+        "minimo": min(benzina_self),
+        "massimo": max(benzina_self),
+        "medio": round(sum(benzina_self) / len(benzina_self), 3)
+    }
 
-def domanda2(dati):
-    """Risponde alla domanda 2."""
-    return None
+def domanda3(prezzi, impianti):
+    prov_somme = {}
+    prov_conteggi = {}
+    for p in prezzi:
+        if p["descCarburante"].lower() == "benzina" and p["isSelf"] == "1":
+            id_imp = p["idImpianto"]
+            if id_imp in impianti:
+                prov = impianti[id_imp]["provincia"]
+                prov_somme[prov] = prov_somme.get(prov, 0.0) + p["prezzo"]
+                prov_conteggi[prov] = prov_conteggi.get(prov, 0) + 1
+    tabella = []
+    for prov in prov_somme:
+        cnt = prov_conteggi[prov]
+        media = round(prov_somme[prov] / cnt, 3)
+        tabella.append([prov, media, cnt])
+    tabella.sort(key=lambda x: x[1], reverse=True)
+    return tabella
 
-
-def domanda3(dati):
-    """Risponde alla domanda 3. Restituisce la tabella
-    che finirà in risultati.csv: una lista di righe."""
-    return []
-
-
-def domanda_nostra(dati):
-    """La domanda inventata dal gruppo."""
-    return None
-
+def domanda_nostra(prezzi):
+    impianti_prezzi = {}
+    for p in prezzi:
+        if p["descCarburante"].lower() == "benzina":
+            id_imp = p["idImpianto"]
+            if id_imp not in impianti_prezzi:
+                impianti_prezzi[id_imp] = {}
+            if p["isSelf"] == "1":
+                impianti_prezzi[id_imp]["self"] = p["prezzo"]
+            elif p["isSelf"] == "0":
+                impianti_prezzi[id_imp]["servito"] = p["prezzo"]
+                
+    differenze = []
+    for id_imp in impianti_prezzi:
+        imp = impianti_prezzi[id_imp]
+        if "self" in imp and "servito" in imp:
+            differenze.append(imp["servito"] - imp["self"])
+            
+    if not differenze:
+        return 0.0
+    return round(sum(differenze) / len(differenze), 3)
 
 def scrivi_risultati(nomefile, intestazione, tabella):
-    """Scrive la tabella in un CSV con csv.writer."""
-    pass
+    with open(nomefile, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(intestazione)
+        w.writerows(tabella)
 
 def main():
-    # 1. Carichiamo entrambi i file
+    print("Caricamento dei file in corso...")
     impianti, scartate_imp = carica_impianti(FILE_IMPIANTI)
     prezzi, scartate_prz = carica_prezzi(FILE_PREZZI)
     
-    print(f"Impianti caricati: {len(impianti)}, scartati: {scartate_imp}")
-    print(f"Prezzi caricati: {len(prezzi)}, scartati: {scartate_prz}")
+    print("\n" + "="*50)
+    print(" RIEPILOGO CARICAMENTO DATI")
+    print("="*50)
+    print(f"• Impianti correttamente caricati: {len(impianti)} (Scartati: {scartate_imp})")
+    print(f"• Prezzi correttamente caricati: {len(prezzi)} (Scartati: {scartate_prz})")
     
-    # 2. Chiamiamo la domanda 1 passando tutti e 4 i dati richiesti
     d1 = domanda1(impianti, prezzi, scartate_imp, scartate_prz)
-    print("--- DOMANDA 1 ---")
-    print(f"Distributori in anagrafica: {d1['distributori']}")
-    print(f"Righe scartate totali: {d1['scartate']}")
-    print(f"Tipi di carburante: {d1['tipi']}")
-    print(f"Prezzi Self: {d1['self']}, Servito: {d1['servito']}")
-    
-    print("Domanda 2:", domanda2(prezzi))
-    
-    tabella = domanda3(prezzi)
+    print("\n" + "="*50)
+    print(" DOMANDA 1: Statistiche Generali")
+    print("="*50)
+    print(f"• Totale distributori in anagrafica : {d1['distributori']:,}")
+    print(f"• Totale righe scartate (complessivo): {d1['scartate']}")
+    print(f"• Tipi di carburante differenti    : {d1['num_tipi']}")
+    print(f"• Rilevazioni modalità Self-service  : {d1['self']:,}")
+    print(f"• Rilevazioni modalità Servito     : {d1['servito']:,}")
+
+    d2 = domanda2(prezzi)
+    print("\n" + "="*50)
+    print(" DOMANDA 2: Benzina Self-Service in Italia")
+    print("="*50)
+    if d2:
+        print(f"• Prezzo minimo : {d2['minimo']:.3f} €/L")
+        print(f"• Prezzo massimo: {d2['massimo']:.3f} €/L")
+        print(f"• Prezzo medio  : {d2['medio']:.3f} €/L")
+
+    tabella = domanda3(prezzi, impianti)
     scrivi_risultati("risultati.csv", ["provincia", "prezzo_medio", "numero_prezzi"], tabella)
-    print("Domanda nostra:", domanda_nostra(prezzi))
+    print("\n" + "="*50)
+    print(" DOMANDA 3: Prezzo Medio per Provincia")
+    print("="*50)
+    print(f"• Calcolate le medie per {len(tabella)} province.")
+    print("• File 'risultati.csv' generato con successo.")
+    print("• Top 3 province più care:")
+    for i, row in enumerate(tabella[:3], 1):
+        print(f"  {i}. {row[0]}: {row[1]:.3f} €/L (su {row[2]} impianti)")
+    print("• Top 3 province più economiche:")
+    for i, row in enumerate(tabella[-3:], 1):
+        print(f"  {i}. {row[0]}: {row[1]:.3f} €/L (su {row[2]} impianti)")
+
+    dn = domanda_nostra(prezzi)
+    print("\n" + "="*50)
+    print(" DOMANDA NOSTRA: Differenza Media Servito vs Self (Benzina)")
+    print("="*50)
+    print(f"• Differenza media di prezzo: +{dn} €/L (circa {dn*100:.1f} centesimi al litro)")
+    print("="*50)
 
 main()
