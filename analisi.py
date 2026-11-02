@@ -14,44 +14,42 @@ def domanda1(dati):
 
 
 def domanda2(dati):
-    prezzi_benzina_self = [
-        d['prezzo'] for d in dati 
-        if 'benzina' in d['tipo_carb'] and 'self' in d['modalita']
+    prezzi, impianti = dati
+    benzina_self = [
+        p["prezzo"]
+        for p in prezzi
+        if p["carb"].lower() == "benzina" and p["isSelf"] == "1"
     ]
-    if not prezzi_benzina_self:
-        return "Nessun dato disponibile per benzina self."
-    prezzi_ordinati = sorted(prezzi_benzina_self)
-    minimo = prezzi_ordinati[0]
-    massimo = prezzi_ordinati[-1]
-    medio = sum(prezzi_ordinati) / len(prezzi_ordinati)
-    cinque_piu_bassi = prezzi_ordinati[:5]
-    cinque_piu_alti = prezzi_ordinati[-5:]
-    return {
-        "minimo": minimo,
-        "massimo": massimo,
-        "medio": round(medio, 3),
-        "5_piu_bassi": cinque_piu_bassi,
-        "5_piu_alti": cinque_piu_alti
-    }
+
+    if not benzina_self:
+        return None
+
+    p_min = min(benzina_self)
+    p_max = max(benzina_self)
+    p_med = round(sum(benzina_self) / len(benzina_self), 3)
+
+    return {"minimo": p_min, "massimo": p_max, "medio": p_med}
 
 def domanda3(dati):
-    prov_prezzi = defaultdict(list)
-    for d in dati:
-        if 'benzina' in d['tipo_carb'] and 'self' in d['modalita']:
-            prov_prezzi[d['provincia']].append(d['prezzo'])
-    medie_provincia = []
-    for prov, prezzi in prov_prezzi.items():
-        if prezzi:
-            media = sum(prezzi) / len(prezzi)
-            medie_provincia.append((prov, round(media, 3)))
-    medie_provincia.sort(key=lambda x: x[1], reverse=True)
-    posizione_bs = None
-    for i, (prov, media) in enumerate(medie_provincia, start=1):
-        if prov.upper() == 'BS':
-            posizione_bs = i
-            break
-    print(f"Posizione di Brescia (BS) nella classifica provinciale: {posizione_bs}")
-    tabella = [[prov, media] for prov, media in medie_provincia]
+    prezzi, impianti = dati
+    prov_somme = {}
+    prov_conteggi = {}
+
+    for p in prezzi:
+        if p["carb"].lower() == "benzina" and p["isSelf"] == "1":
+            id_imp = p["idImpianto"]
+            if id_imp in impianti:
+                prov = impianti[id_imp]["provincia"]
+                prov_somme[prov] = prov_somme.get(prov, 0.0) + p["prezzo"]
+                prov_conteggi[prov] = prov_conteggi.get(prov, 0) + 1
+
+    tabella = []
+    for prov in prov_somme:
+        cnt = prov_conteggi[prov]
+        media = round(prov_somme[prov] / cnt, 3)
+        tabella.append([prov, media, cnt])
+
+    tabella.sort(key=lambda x: x[1], reverse=True)
     return tabella
 
 def domanda_nostra(dati):
