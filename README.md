@@ -1,8 +1,8 @@
 # Progetto 1 - Prezzi Carburanti
 
 ## Gruppo
-- FaresEltamlawy: carica_impianti, carica_prezzi, domanda1, domanda2
-- [Inserire Username Compagno]: domanda3, domanda_nostra, scrivi_risultati
+- Fares Eltamlawy: domanda_nostra, domanda1, domanda2, README.
+- Matteo Sorteni: carica_impianti, carica_prezzi, domanda3,  scrivi_risultati.
 
 
 ## Il dataset
