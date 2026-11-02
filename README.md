@@ -23,7 +23,7 @@
 
 
 ## Dati scartati
-- **Righe scartate:** Durante il caricamento, le righe con colonne insufficienti o con valori di prezzo non convertibili in formato numerico (`ValueError`) sono state intercettate, scartate e conteggiate dal programma.
+- **Righe scartate:** Durante il caricamento, le righe con colonne insufficienti o con valori di prezzo non convertibili in formato numerico (`ValueError`) sono state scartate e conteggiate dal programma.
 
 
 ## Risposte
