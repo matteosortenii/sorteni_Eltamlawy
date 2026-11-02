@@ -3,14 +3,14 @@ import csv
 FILE = "dati/carburanti-impianti-2026-10-13.csv"
 
 def carica(nomefile):
-    """Legge il file, converte i numeri, scarta le righe sporche.
-    Restituisce la lista delle righe buone e il numero di righe scartate."""
-    return [], 0
+ """Legge il file, converte i numeri, scarta le righe sporche.
+ Restituisce la lista delle righe buone e il numero di righe scartate."""
+ return [], 0
 
 
 def domanda1(dati):
-    """Risponde alla domanda 1 della scheda."""
-    return None
+ """Risponde alla domanda 1 della scheda."""
+ return None
 
 
 def domanda2(dati):
@@ -77,18 +77,18 @@ def domanda_nostra(dati):
 
 
 def scrivi_risultati(nomefile, intestazione, tabella):
-    """Scrive la tabella in un CSV con csv.writer."""
-    pass
+ """Scrive la tabella in un CSV con csv.writer."""
+ pass
 
 
 def main():
-    dati, scartate = carica(FILE)
-    print(f"Righe buone: {len(dati)}, scartate: {scartate}")
-    print("Domanda 1:", domanda1(dati))
-    print("Domanda 2:", domanda2(dati))
-    tabella = domanda3(dati)
-    scrivi_risultati("risultati.csv", ["colonna1", "colonna2"], tabella)
-    print("Domanda nostra:", domanda_nostra(dati))
+ dati, scartate = carica(FILE)
+ print(f"Righe buone: {len(dati)}, scartate: {scartate}")
+ print("Domanda 1:", domanda1(dati))
+ print("Domanda 2:", domanda2(dati))
+ tabella = domanda3(dati)
+ scrivi_risultati("risultati.csv", ["colonna1", "colonna2"], tabella)
+ print("Domanda nostra:", domanda_nostra(dati))
 
 
 main()
