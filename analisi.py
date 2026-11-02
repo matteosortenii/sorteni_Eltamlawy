@@ -86,24 +86,27 @@ def domanda3(prezzi, impianti):
     tabella.sort(key=lambda x: x[1], reverse=True)
     return tabella
 
-def domanda_nostra(prezzi, impianti):
-    bandita_somme = {}
-    bandita_conteggi = {}
+def domanda_nostra(prezzi):
+    impianti_prezzi = {}
     for p in prezzi:
-        if p["descCarburante"].lower() == "benzina" and p["isSelf"] == "1":
+        if p["descCarburante"].lower() == "benzina":
             id_imp = p["idImpianto"]
-            if id_imp in impianti:
-                bandiera = impianti[id_imp]["bandiera"]
-                bandita_somme[bandiera] = bandita_somme.get(bandiera, 0.0) + p["prezzo"]
-                bandita_conteggi[bandiera] = bandita_conteggi.get(bandiera, 0) + 1
-    risultati = []
-    for bandiera in bandita_somme:
-        cnt = bandita_conteggi[bandiera]
-        if cnt >= 50:
-            media = round(bandita_somme[bandiera] / cnt, 3)
-            risultati.append((bandiera, media, cnt))
-    risultati.sort(key=lambda x: x[1])
-    return risultati[:5]
+            if id_imp not in impianti_prezzi:
+                impianti_prezzi[id_imp] = {}
+            if p["isSelf"] == "1":
+                impianti_prezzi[id_imp]["self"] = p["prezzo"]
+            elif p["isSelf"] == "0":
+                impianti_prezzi[id_imp]["servito"] = p["prezzo"]
+                
+    differenze = []
+    for id_imp in impianti_prezzi:
+        imp = impianti_prezzi[id_imp]
+        if "self" in imp and "servito" in imp:
+            differenze.append(imp["servito"] - imp["self"])
+            
+    if not differenze:
+        return 0.0
+    return round(sum(differenze) / len(differenze), 3)
 
 def scrivi_risultati(nomefile, intestazione, tabella):
     with open(nomefile, "w", encoding="utf-8", newline="") as f:
@@ -155,12 +158,11 @@ def main():
     for i, row in enumerate(tabella[-3:], 1):
         print(f"  {i}. {row[0]}: {row[1]:.3f} €/L (su {row[2]} impianti)")
 
-    dn = domanda_nostra(prezzi, impianti)
+    dn = domanda_nostra(prezzi)
     print("\n" + "="*50)
-    print(" DOMANDA NOSTRA: Top 5 Marche più Economiche (Self)")
+    print(" DOMANDA NOSTRA: Differenza Media Servito vs Self (Benzina)")
     print("="*50)
-    for i, (bandiera, media, count) in enumerate(dn, 1):
-        print(f"  {i}. {bandiera} - Media: {media:.3f} €/L ({count} impianti analizzati)")
+    print(f"• Differenza media di prezzo: +{dn} €/L (circa {dn*100:.1f} centesimi al litro)")
     print("="*50)
 
 main()
