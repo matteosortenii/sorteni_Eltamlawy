@@ -1,7 +1,7 @@
 import json
 
-FILE_IMPIANTI = "carburanti-impianti-2026-10-13.json"
-FILE_PREZZI = "carburanti-prezzi-2026-10-13.json"
+FILE_IMPIANTI = "dati/carburanti-impianti-2026-10-13.json"
+FILE_PREZZI = "dati/carburanti-prezzi-2026-10-13.json"
 
 
 def _estrai_campi(elemento):
